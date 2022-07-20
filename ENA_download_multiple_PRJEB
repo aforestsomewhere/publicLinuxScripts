@@ -1,0 +1,33 @@
+# 20.7.22 Katie Fala
+
+#Provide a PRJEB.txt file containing the Project Numbers you wish to download from ENA/EBI
+#PRJEB123456
+#PRJEB678910
+#etc
+
+for i in $(cat PRJEB.txt)
+do
+    #make output directory for the current project
+    mkdir "$i"
+
+    #download tsv containing ftp addresses from EBI
+    wget "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=$i&result=read_run&fields=fastq_ftp&format=tsv&download=true&limit=0" -O test.tsv
+    #replaces the ; between ftp links with \t to parse as tsv, keeps just the ftp columns
+    awk 'BEGIN{OFS="\t" } NR == 1 { print } NR > 1 { gsub(";","\t",$2); gsub("ftp","ftp://ftp",$2);print $2} ' test.tsv > ftp.tsv
+    #remove header
+    tail -n +2 ftp.tsv > ftps.tsv
+
+    #generate file with ftp urls for forward reads (_1) and reverse reads (_2)
+    awk -F'\t' '{print $1}' ftps.tsv > fastq_1.txt
+    awk -F'\t' '{print $2}' ftps.tsv > fastq_2.txt
+
+    #download the files to output directory for each project
+    wget -i fastq_1.txt -P "$i"/
+    wget -i fastq_2.txt -P "$i"/
+
+    #remove intermediate files
+    rm test.tsv
+    rm ftp.tsv
+    rm fastq_1.txt
+    rm fastq_2.txt
+done
