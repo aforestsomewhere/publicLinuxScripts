@@ -1,0 +1,20 @@
+# 20.7.22 Katie Fala
+
+#fetches the tsv from ENA containing the fastq_ftp links
+#replace PRJEB32768 with your desired Project Number
+wget 'https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB32768&result=read_run&fields=fastq_ftp&format=tsv&download=true&limit=0' -O test.tsv
+
+#replaces the ; between ftp links with \t to parse as tsv, keeps just the ftp columns
+awk 'BEGIN{OFS="\t" } NR == 1 { print } NR > 1 { gsub(";","\t",$2); gsub("ftp","ftp://ftp",$2);print $2} ' test.tsv > ftp.tsv
+#remove header
+tail -n +2 ftp.tsv > ftps.tsv
+
+#generate file with ftp urls for forward reads (_1) and reverse reads (_2)
+awk -F'\t' '{print $1}' ftps.tsv > fastq_1.txt
+awk -F'\t' '{print $2}' ftps.tsv > fastq_2.txt
+
+#download the files
+wget -i fastq_1.txt
+wget -i fastq_1.txt
+
+
