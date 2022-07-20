@@ -15,6 +15,6 @@ awk -F'\t' '{print $2}' ftps.tsv > fastq_2.txt
 
 #download the files
 wget -i fastq_1.txt
-wget -i fastq_1.txt
+wget -i fastq_2.txt
 
 
